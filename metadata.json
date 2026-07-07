@@ -1,0 +1,6 @@
+{
+  "name": "Group Expense Splitter",
+  "description": "An elegant, interactive dashboard to split group expenses, track who owes whom, calculate optimized balances, and parse custom receipts using AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
