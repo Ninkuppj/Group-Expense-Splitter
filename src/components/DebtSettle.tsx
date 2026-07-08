@@ -368,9 +368,8 @@ export default function DebtSettle({ members, expenses, onRecordSettlement, onUp
       {activeMomoTrans && (() => {
         const calculatedVndAmount = Math.round(activeMomoTrans.amount);
         const displayVndAmount = vndAmountOverride !== '' ? parseInt(vndAmountOverride) || 0 : calculatedVndAmount;
-        const noteClean = encodeURIComponent(`SplitFair ${activeMomoTrans.fromName} thanh toan ${activeMomoTrans.toName}`);
         const qrImageSrc = momoPhoneInput 
-          ? `https://img.vietqr.io/image/momo-${momoPhoneInput}-compact2.jpg?amount=${displayVndAmount}&addInfo=${noteClean}` 
+          ? `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent('https://nhantien.momo.vn/' + momoPhoneInput + '/' + displayVndAmount)}` 
           : '';
 
         return (
@@ -477,13 +476,9 @@ export default function DebtSettle({ members, expenses, onRecordSettlement, onUp
                           alt="MoMo payment QR code" 
                           referrerPolicy="no-referrer"
                           className="w-full h-full object-contain"
-                          onError={(e) => {
-                            const altUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent('https://nhantien.momo.vn/' + momoPhoneInput + '/' + displayVndAmount)}`;
-                            (e.target as HTMLImageElement).src = altUrl;
-                          }}
                         />
                       </div>
-                      <span className="text-[9px] text-black/40 uppercase font-semibold tracking-wider mt-3">Scan with MoMo App or Bank App</span>
+                      <span className="text-[9px] text-[#A50064] uppercase font-bold tracking-wider mt-3">Scan with MoMo App to pay</span>
                     </div>
 
                     {/* Quick links & action */}

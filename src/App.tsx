@@ -135,15 +135,22 @@ export default function App() {
   const activeGroup = groups.find(g => g.id === activeGroupId) || null;
 
   // Handler: Create Group
-  const handleCreateGroup = async (name: string, description: string) => {
+  const handleCreateGroup = async (name: string, description: string, initialMembers?: Omit<Member, 'id'>[]) => {
     const tempId = crypto.randomUUID();
+    const mappedInitialMembers = (initialMembers || []).map(m => ({
+      id: crypto.randomUUID(),
+      name: m.name,
+      phone: m.phone,
+      avatarColor: m.avatarColor || AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]
+    }));
     const tempGroup: Group = {
       id: tempId,
       name,
       description,
       createdAt: new Date().toISOString().split('T')[0],
       members: [
-        { id: 'm_owner', name: 'You (Me)', avatarColor: 'bg-slate-900 text-white' }
+        { id: 'm_owner', name: 'You (Me)', avatarColor: 'bg-slate-900 text-white' },
+        ...mappedInitialMembers
       ],
       expenses: []
     };
@@ -155,7 +162,7 @@ export default function App() {
       const res = await fetch('/api/groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, description })
+        body: JSON.stringify({ name, description, initialMembers })
       });
       if (res.ok) {
         const dbGroup = await res.json();

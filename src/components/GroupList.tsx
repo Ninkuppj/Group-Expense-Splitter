@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Users, Plus, Check, ChevronRight, UserPlus, Trash2, Mail } from 'lucide-react';
 import { Group, Member, AVATAR_COLORS } from '../types';
 
@@ -6,7 +6,7 @@ interface GroupListProps {
   groups: Group[];
   activeGroupId: string | null;
   onSelectGroup: (id: string) => void;
-  onCreateGroup: (name: string, description: string) => void;
+  onCreateGroup: (name: string, description: string, initialMembers?: Omit<Member, 'id'>[]) => void;
   onAddMember: (groupId: string, name: string, phone?: string) => void;
   onDeleteGroup: (id: string) => void;
 }
@@ -22,6 +22,7 @@ export default function GroupList({
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupDesc, setNewGroupDesc] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [selectedExistingMembers, setSelectedExistingMembers] = useState<{ name: string; phone?: string; avatarColor?: string }[]>([]);
 
   // Add Member State
   const [newMemberName, setNewMemberName] = useState('');
@@ -30,12 +31,40 @@ export default function GroupList({
 
   const activeGroup = groups.find(g => g.id === activeGroupId);
 
+  // Find all unique existing members in the system across all groups
+  const allExistingMembers = useMemo(() => {
+    const map = new Map<string, { name: string; phone?: string; avatarColor?: string }>();
+    groups.forEach(g => {
+      g.members.forEach(m => {
+        const normalized = m.name.trim().toLowerCase();
+        if (
+          normalized === 'you (me)' ||
+          normalized === 'you' ||
+          m.id === 'm_me' ||
+          m.id === 'm_owner'
+        ) {
+          return;
+        }
+        const key = `${m.name.trim().toLowerCase()}__${m.phone?.trim() || ''}`;
+        if (!map.has(key)) {
+          map.set(key, {
+            name: m.name,
+            phone: m.phone || undefined,
+            avatarColor: m.avatarColor || undefined
+          });
+        }
+      });
+    });
+    return Array.from(map.values());
+  }, [groups]);
+
   const handleCreateGroupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newGroupName.trim()) return;
-    onCreateGroup(newGroupName.trim(), newGroupDesc.trim());
+    onCreateGroup(newGroupName.trim(), newGroupDesc.trim(), selectedExistingMembers);
     setNewGroupName('');
     setNewGroupDesc('');
+    setSelectedExistingMembers([]);
     setIsCreating(false);
   };
 
@@ -93,10 +122,51 @@ export default function GroupList({
                 id="group-desc-input"
               />
             </div>
+
+            {allExistingMembers.length > 0 && (
+              <div className="space-y-1.5 pt-1.5 border-t border-black/5">
+                <label className="block text-[8px] font-bold text-black/40 uppercase tracking-wider">Quick-add Existing Members</label>
+                <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1 bg-white border border-black/5 rounded-xs shadow-3xs">
+                  {allExistingMembers.map((member, index) => {
+                    const isSelected = selectedExistingMembers.some(
+                      sm => sm.name.toLowerCase() === member.name.toLowerCase() && sm.phone === member.phone
+                    );
+                    return (
+                      <button
+                        type="button"
+                        key={index}
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedExistingMembers(prev => prev.filter(
+                              sm => !(sm.name.toLowerCase() === member.name.toLowerCase() && sm.phone === member.phone)
+                            ));
+                          } else {
+                            setSelectedExistingMembers(prev => [...prev, member]);
+                          }
+                        }}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded-full border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#A3E635]/20 border-[#4D7C0F] text-[#3F6212]'
+                            : 'bg-stone-50 border-black/10 text-black/60 hover:border-black/30'
+                        }`}
+                      >
+                        {isSelected && <Check className="w-2.5 h-2.5 text-[#4D7C0F] shrink-0" />}
+                        <span className="truncate max-w-[80px]">{member.name}</span>
+                        {member.phone && <span className="text-[8px] text-black/30">({member.phone.slice(-3)})</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center justify-end gap-2 pt-1">
               <button
                 type="button"
-                onClick={() => setIsCreating(false)}
+                onClick={() => {
+                  setIsCreating(false);
+                  setSelectedExistingMembers([]);
+                }}
                 className="text-[9px] uppercase tracking-wider font-bold text-black/50 hover:text-black px-2 py-1.5"
                 id="cancel-group-btn"
               >
@@ -130,7 +200,7 @@ export default function GroupList({
                 <div className="min-w-0 flex-1">
                   <h4 className="font-bold text-sm tracking-tight">{group.name}</h4>
                   <p className={`text-[10px] tracking-wider uppercase font-semibold mt-0.5 ${isActive ? 'text-white/60' : 'text-black/40'}`}>
-                    {group.members.length} members • ${totalSpend.toFixed(2)}
+                    {group.members.length} members • {Math.round(totalSpend).toLocaleString('vi-VN')} ₫
                   </p>
                 </div>
                 

@@ -2,7 +2,7 @@
 
 SplitFair is a highly polished, modern full-stack web application designed to simplify splitting group expenses, tracking obligations, and settling balances with ease. Tailored with beautiful Swiss-minimalist typography, local Vietnamese Dong (₫) optimizations, and powered by Gemini AI, it makes group finances delightful.
 
-![SplitFair Web Application UI Screenshot](src/assets/images/splitfair_ui_screenshot_1783485197775.jpg)
+![SplitFair Web Application UI Screenshot](src/assets/images/splitfair_ui_screenshot_1783497119868.jpg)
 
 ---
 

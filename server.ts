@@ -329,7 +329,7 @@ app.get("/api/groups", async (req, res) => {
 });
 
 app.post("/api/groups", async (req, res) => {
-  const { name, description } = req.body;
+  const { name, description, initialMembers } = req.body;
 
   if (usePrisma) {
     try {
@@ -338,10 +338,17 @@ app.post("/api/groups", async (req, res) => {
           name,
           description,
           members: {
-            create: {
-              name: "You (Me)",
-              avatarColor: "bg-slate-900 text-white"
-            }
+            create: [
+              {
+                name: "You (Me)",
+                avatarColor: "bg-slate-900 text-white"
+              },
+              ...(initialMembers || []).map((m: any) => ({
+                name: m.name,
+                phone: m.phone || null,
+                avatarColor: m.avatarColor || "bg-rose-500 text-white"
+              }))
+            ]
           }
         },
         include: {
@@ -380,7 +387,13 @@ app.post("/api/groups", async (req, res) => {
         name: "You (Me)",
         phone: null,
         avatarColor: "bg-slate-900 text-white"
-      }
+      },
+      ...(initialMembers || []).map((m: any) => ({
+        id: 'm_' + Math.random().toString(36).substring(2, 9),
+        name: m.name,
+        phone: m.phone || null,
+        avatarColor: m.avatarColor || "bg-rose-500 text-white"
+      }))
     ],
     expenses: [],
     customMenu: []
