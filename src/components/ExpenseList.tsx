@@ -126,7 +126,7 @@ export default function ExpenseList({ members, expenses, onEdit, onDelete }: Exp
 
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <span className="font-serif italic text-base font-bold text-[#1A1A1A]">${expense.amount.toFixed(2)}</span>
+                    <span className="font-serif italic text-base font-bold text-[#1A1A1A]">{Math.round(expense.amount).toLocaleString('vi-VN')} ₫</span>
                     <p className="text-[9px] uppercase tracking-wider font-bold text-black/30 flex items-center justify-end gap-1 mt-0.5">
                       <Calendar className="w-2.5 h-2.5" />
                       {expense.date}
@@ -187,7 +187,7 @@ export default function ExpenseList({ members, expenses, onEdit, onDelete }: Exp
                                 <span className="text-black/40 text-[10px] ml-1.5">x{item.quantity}</span>
                                 <p className="text-[10px] text-stone-500 font-medium mt-0.5">Consumed by: {itemConsumers || 'Nobody'}</p>
                               </div>
-                              <span className="font-serif italic font-semibold text-stone-800">${(item.price * item.quantity).toFixed(2)}</span>
+                              <span className="font-serif italic font-semibold text-stone-800">{Math.round(item.price * item.quantity).toLocaleString('vi-VN')} ₫</span>
                             </div>
                           );
                         })}
@@ -216,7 +216,7 @@ export default function ExpenseList({ members, expenses, onEdit, onDelete }: Exp
                                   {targetName}
                                 </span>
                               </div>
-                              <span className="font-serif italic font-semibold text-stone-800">${item.price.toFixed(2)}</span>
+                              <span className="font-serif italic font-semibold text-stone-800">{Math.round(item.price).toLocaleString('vi-VN')} ₫</span>
                             </div>
                           );
                         })}
@@ -228,7 +228,7 @@ export default function ExpenseList({ members, expenses, onEdit, onDelete }: Exp
                             return (
                               <div className="pt-2 border-t border-dashed border-stone-200 text-xs flex justify-between items-center text-stone-500 font-medium">
                                 <span>Remaining balance (tax/tips split equally)</span>
-                                <span className="font-serif italic font-semibold">${leftover.toFixed(2)}</span>
+                                <span className="font-serif italic font-semibold">{Math.round(leftover).toLocaleString('vi-VN')} ₫</span>
                               </div>
                             );
                           }
@@ -250,7 +250,7 @@ export default function ExpenseList({ members, expenses, onEdit, onDelete }: Exp
                           return (
                             <div key={m.id} className="flex justify-between items-center text-black/80 font-medium">
                               <span className="text-xs">{m.name}</span>
-                              <span className="font-semibold text-black">${paid.toFixed(2)}</span>
+                              <span className="font-semibold text-black">{Math.round(paid).toLocaleString('vi-VN')} ₫</span>
                             </div>
                           );
                         })}
@@ -267,7 +267,7 @@ export default function ExpenseList({ members, expenses, onEdit, onDelete }: Exp
                           return (
                             <div key={m.id} className="flex justify-between items-center text-black/80 font-medium">
                               <span className="text-xs">{m.name}</span>
-                              <span className="font-semibold text-black">${owes.toFixed(2)}</span>
+                              <span className="font-semibold text-black">{Math.round(owes).toLocaleString('vi-VN')} ₫</span>
                             </div>
                           );
                         })}

@@ -7,7 +7,7 @@ interface GroupListProps {
   activeGroupId: string | null;
   onSelectGroup: (id: string) => void;
   onCreateGroup: (name: string, description: string) => void;
-  onAddMember: (groupId: string, name: string, email?: string) => void;
+  onAddMember: (groupId: string, name: string, phone?: string) => void;
   onDeleteGroup: (id: string) => void;
 }
 
@@ -25,7 +25,7 @@ export default function GroupList({
 
   // Add Member State
   const [newMemberName, setNewMemberName] = useState('');
-  const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [newMemberPhone, setNewMemberPhone] = useState('');
   const [isAddingMember, setIsAddingMember] = useState(false);
 
   const activeGroup = groups.find(g => g.id === activeGroupId);
@@ -42,9 +42,9 @@ export default function GroupList({
   const handleAddMemberSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMemberName.trim() || !activeGroupId) return;
-    onAddMember(activeGroupId, newMemberName.trim(), newMemberEmail.trim() || undefined);
+    onAddMember(activeGroupId, newMemberName.trim(), newMemberPhone.trim() || undefined);
     setNewMemberName('');
-    setNewMemberEmail('');
+    setNewMemberPhone('');
     setIsAddingMember(false);
   };
 
@@ -192,12 +192,12 @@ export default function GroupList({
               </div>
               <div>
                 <input
-                  type="email"
-                  placeholder="Email (Optional)"
-                  value={newMemberEmail}
-                  onChange={(e) => setNewMemberEmail(e.target.value)}
+                  type="text"
+                  placeholder="Phone (for MoMo, e.g. 0912345678)"
+                  value={newMemberPhone}
+                  onChange={(e) => setNewMemberPhone(e.target.value)}
                   className="w-full bg-white border border-black/10 focus:border-black rounded-xs px-3 py-2 text-xs text-black transition-all shadow-2xs focus:outline-none focus:ring-0"
-                  id="member-email-input"
+                  id="member-phone-input"
                 />
               </div>
               <div className="flex items-center justify-end gap-2 pt-1">
@@ -239,10 +239,10 @@ export default function GroupList({
                     </div>
                     <div className="min-w-0">
                       <p className="font-bold text-xs text-[#1A1A1A] truncate">{member.name}</p>
-                      {member.email && (
+                      {member.phone && (
                         <p className="text-[10px] text-[#1A1A1A]/50 flex items-center gap-1 truncate font-medium mt-0.5">
-                          <Mail className="w-2.5 h-2.5 shrink-0" />
-                          {member.email}
+                          <span className="bg-[#A3E635]/20 text-[#3F6212] px-1 py-0.5 rounded-[2px] font-bold text-[8px] tracking-wider uppercase">MoMo</span>
+                          {member.phone}
                         </p>
                       )}
                     </div>

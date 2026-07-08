@@ -1,7 +1,7 @@
 export interface Member {
   id: string;
   name: string;
-  email?: string;
+  phone?: string;
   avatarColor?: string; // Tailwind class for avatar background (e.g., 'bg-rose-500')
 }
 

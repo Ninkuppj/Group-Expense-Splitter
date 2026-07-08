@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Check, DollarSign, Calendar, Tag, FileText, Split, Users, Sparkles, Upload, Image as ImageIcon, X, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Check, DollarSign, Banknote, Calendar, Tag, FileText, Split, Users, Sparkles, Upload, Image as ImageIcon, X, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { Member, Expense, SplitType, CATEGORIES, MenuItem, MenuItemInstance, PartyItemInstance } from '../types';
 import AiAssistant from './AiAssistant';
 
 const DEFAULT_MENU_ITEMS: MenuItem[] = [
-  { id: 'item-1', name: 'Cheese Pizza', price: 14.00, category: 'Food' },
-  { id: 'item-2', name: 'Caesar Salad', price: 10.50, category: 'Food' },
-  { id: 'item-3', name: 'Garlic Bread', price: 6.00, category: 'Food' },
-  { id: 'item-4', name: 'Beef Burger', price: 15.50, category: 'Food' },
-  { id: 'item-5', name: 'French Fries', price: 5.00, category: 'Food' },
-  { id: 'item-6', name: 'Spaghetti Carbonara', price: 16.50, category: 'Food' },
-  { id: 'item-7', name: 'Craft Beer', price: 7.00, category: 'Drink' },
-  { id: 'item-8', name: 'Iced Latte', price: 4.50, category: 'Drink' },
-  { id: 'item-9', name: 'Chocolate Lava Cake', price: 8.50, category: 'Food' },
-  { id: 'item-10', name: 'Soft Drink', price: 2.50, category: 'Drink' },
+  { id: 'item-1', name: 'Cheese Pizza', price: 140000, category: 'Food' },
+  { id: 'item-2', name: 'Caesar Salad', price: 105000, category: 'Food' },
+  { id: 'item-3', name: 'Garlic Bread', price: 60000, category: 'Food' },
+  { id: 'item-4', name: 'Beef Burger', price: 155000, category: 'Food' },
+  { id: 'item-5', name: 'French Fries', price: 50000, category: 'Food' },
+  { id: 'item-6', name: 'Spaghetti Carbonara', price: 165000, category: 'Food' },
+  { id: 'item-7', name: 'Craft Beer', price: 70000, category: 'Drink' },
+  { id: 'item-8', name: 'Iced Latte', price: 45000, category: 'Drink' },
+  { id: 'item-9', name: 'Chocolate Lava Cake', price: 85000, category: 'Food' },
+  { id: 'item-10', name: 'Soft Drink', price: 25000, category: 'Drink' },
 ];
 
 interface ExpenseFormProps {
@@ -54,7 +54,7 @@ export default function ExpenseForm({
   const [splits, setSplits] = useState<{ [memberId: string]: number }>({});
 
   // Daily Bill States
-  const [groupMenu, setGroupMenu] = useState<MenuItem[]>(() => customMenu && customMenu.length > 0 ? customMenu : DEFAULT_MENU_ITEMS);
+  const [groupMenu, setGroupMenu] = useState<MenuItem[]>(() => customMenu ? customMenu : DEFAULT_MENU_ITEMS);
   const [menuItemSelections, setMenuItemSelections] = useState<MenuItemInstance[]>([]);
   const [isAddingCustomMenuItem, setIsAddingCustomMenuItem] = useState(false);
   const [customMenuItemName, setCustomMenuItemName] = useState('');
@@ -71,7 +71,7 @@ export default function ExpenseForm({
 
   // Synchronize menu state when customMenu prop changes
   useEffect(() => {
-    if (customMenu && customMenu.length > 0) {
+    if (customMenu) {
       setGroupMenu(customMenu);
     }
   }, [customMenu]);
@@ -547,7 +547,7 @@ export default function ExpenseForm({
       payers: payersObj,
       splitType,
       splits: splitsObj,
-      billType,
+      billType: billType === 'general' ? undefined : billType,
       menuItems: billType === 'daily' ? menuItemSelections : undefined,
       partyItems: billType === 'party' ? partyItemSelections : undefined,
     };
@@ -639,17 +639,17 @@ export default function ExpenseForm({
 
           {billType !== 'daily' && (
             <div>
-              <label className="block text-[9px] font-bold text-black/40 uppercase tracking-[0.2em] mb-1.5">Total Amount ($)</label>
+              <label className="block text-[9px] font-bold text-black/40 uppercase tracking-[0.2em] mb-1.5">Total Amount (₫)</label>
               <div className="relative">
-                <DollarSign className="absolute left-3.5 top-3 w-4 h-4 text-black/30" />
+                <Banknote className="absolute left-3.5 top-3 w-4 h-4 text-black/30" />
                 <input
                   type="number"
-                  step="0.01"
-                  min="0.01"
+                  step="1"
+                  min="1"
                   required
                   value={amount || ''}
-                  onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
-                  placeholder="0.00"
+                  onChange={(e) => setAmount(parseInt(e.target.value) || 0)}
+                  placeholder="0"
                   className="w-full bg-white border border-black/10 focus:border-black rounded-xs pl-10 pr-4 py-2.5 text-xs text-[#1A1A1A] transition-all font-sans focus:outline-none focus:ring-0 shadow-2xs font-medium"
                   id="expense-amount-input"
                 />
@@ -731,7 +731,7 @@ export default function ExpenseForm({
                           <span className="font-bold text-xs text-black">{m.name}’s Plate</span>
                         </div>
                         <span className="font-serif italic text-xs font-semibold text-stone-800">
-                          Subtotal: ${memberTotal.toFixed(2)}
+                          Subtotal: {Math.round(memberTotal).toLocaleString('vi-VN')} ₫
                         </span>
                       </div>
 
@@ -746,7 +746,7 @@ export default function ExpenseForm({
                               <div key={item.id} className="flex items-center justify-between gap-2 text-xs py-1 border-b border-dashed border-black/[0.03] last:border-none">
                                 <div className="flex flex-col min-w-0">
                                   <span className="font-bold text-black truncate">{item.name}</span>
-                                  <span className="text-[9px] text-black/40 font-serif italic">${item.price.toFixed(2)} each</span>
+                                  <span className="text-[9px] text-black/40 font-serif italic">{Math.round(item.price).toLocaleString('vi-VN')} ₫ each</span>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
                                   <div className="flex items-center gap-1.5 border border-black/10 bg-[#F4F2EE] rounded-xs p-0.5">
@@ -766,8 +766,8 @@ export default function ExpenseForm({
                                       +
                                     </button>
                                   </div>
-                                  <span className="font-serif italic font-semibold text-stone-800 w-12 text-right">
-                                    ${(item.price * item.quantity).toFixed(2)}
+                                  <span className="font-serif italic font-semibold text-stone-800 w-24 text-right">
+                                    {Math.round(item.price * item.quantity).toLocaleString('vi-VN')} ₫
                                   </span>
                                 </div>
                               </div>
@@ -795,7 +795,7 @@ export default function ExpenseForm({
                           <option value="">🍽️ Food...</option>
                           {groupMenu.filter(menuItem => menuItem.category.toLowerCase() !== 'drink').map(menuItem => (
                             <option key={menuItem.id} value={menuItem.id}>
-                              {menuItem.name} (${menuItem.price.toFixed(2)})
+                              {menuItem.name} ({Math.round(menuItem.price).toLocaleString('vi-VN')} ₫)
                             </option>
                           ))}
                         </select>
@@ -817,7 +817,7 @@ export default function ExpenseForm({
                           <option value="">🥤 Drink...</option>
                           {groupMenu.filter(menuItem => menuItem.category.toLowerCase() === 'drink').map(menuItem => (
                             <option key={menuItem.id} value={menuItem.id}>
-                              {menuItem.name} (${menuItem.price.toFixed(2)})
+                              {menuItem.name} ({Math.round(menuItem.price).toLocaleString('vi-VN')} ₫)
                             </option>
                           ))}
                         </select>
@@ -855,10 +855,10 @@ export default function ExpenseForm({
                       />
                     </div>
                     <div>
-                      <label className="block text-[8px] font-bold text-black/40 uppercase tracking-wider mb-1">Isolated Price ($)</label>
+                      <label className="block text-[8px] font-bold text-black/40 uppercase tracking-wider mb-1">Isolated Price (₫)</label>
                       <input
                         type="number"
-                        step="0.01"
+                        step="1"
                         placeholder="Price"
                         value={customMenuItemPrice}
                         onChange={(e) => setCustomMenuItemPrice(e.target.value)}
@@ -913,7 +913,7 @@ export default function ExpenseForm({
             {/* Calculated Amount Summary */}
             <div className="pt-3 border-t border-black/5 flex items-center justify-between">
               <span className="text-[10px] font-bold text-black uppercase tracking-wider">Computed Daily Bill Total:</span>
-              <span className="font-serif italic text-lg font-bold text-[#1A1A1A]">${amount.toFixed(2)}</span>
+              <span className="font-serif italic text-lg font-bold text-[#1A1A1A]">{Math.round(amount).toLocaleString('vi-VN')} ₫</span>
             </div>
           </div>
         )}
@@ -947,7 +947,7 @@ export default function ExpenseForm({
                         </span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="font-serif italic font-semibold">${item.price.toFixed(2)}</span>
+                        <span className="font-serif italic font-semibold">{Math.round(item.price).toLocaleString('vi-VN')} ₫</span>
                         <button
                           type="button"
                           onClick={() => handleRemovePartyItem(item.id)}
@@ -975,8 +975,8 @@ export default function ExpenseForm({
                 />
                 <input
                   type="number"
-                  step="0.01"
-                  placeholder="Price ($)"
+                  step="1"
+                  placeholder="Price (₫)"
                   value={newPartyItemPrice}
                   onChange={(e) => setNewPartyItemPrice(e.target.value)}
                   className="bg-[#F4F2EE]/40 border border-black/10 px-3 py-2 text-xs rounded-xs focus:bg-white focus:outline-none"
@@ -1023,12 +1023,12 @@ export default function ExpenseForm({
             <div className="pt-3 border-t border-black/5 space-y-1.5 text-xs font-sans">
               <div className="flex justify-between text-black/40">
                 <span>Itemized Party Total:</span>
-                <span>${partyItemSelections.reduce((sum, item) => sum + item.price, 0).toFixed(2)}</span>
+                <span>{Math.round(partyItemSelections.reduce((sum, item) => sum + item.price, 0)).toLocaleString('vi-VN')} ₫</span>
               </div>
               <div className="flex justify-between text-black/40">
                 <span>Leftover tip/tax (split equally):</span>
                 <span>
-                  ${Math.max(0, amount - partyItemSelections.reduce((sum, item) => sum + item.price, 0)).toFixed(2)}
+                  {Math.round(Math.max(0, amount - partyItemSelections.reduce((sum, item) => sum + item.price, 0))).toLocaleString('vi-VN')} ₫
                 </span>
               </div>
             </div>
@@ -1074,14 +1074,14 @@ export default function ExpenseForm({
                 <div key={m.id} className="flex items-center justify-between gap-3 bg-white p-3 px-4 border border-black/5 rounded-xs shadow-3xs" id={`multi-payer-row-${m.id}`}>
                   <span className="text-xs text-[#1A1A1A] font-bold font-sans">{m.name}</span>
                   <div className="relative w-32 shrink-0">
-                    <span className="absolute left-2.5 top-1.5 text-xs text-black/40 font-sans">$</span>
+                    <span className="absolute left-2.5 top-1.5 text-xs text-black/40 font-sans">₫</span>
                     <input
                       type="number"
-                      step="0.01"
+                      step="1"
                       min="0"
                       value={multiPayers[m.id] || ''}
                       onChange={(e) => handlePayerAmountChange(m.id, e.target.value)}
-                      placeholder="0.00"
+                      placeholder="0"
                       className="w-full bg-[#F4F2EE]/50 border border-black/10 focus:bg-white focus:border-black rounded-xs pl-6 pr-2.5 py-1.5 text-xs text-right font-sans focus:outline-none focus:ring-0 font-medium"
                       id={`multi-payer-input-${m.id}`}
                     />
@@ -1091,7 +1091,7 @@ export default function ExpenseForm({
               <div className="flex items-center justify-between text-[10px] uppercase tracking-wider font-bold px-2 pt-2 border-t border-black/5 font-sans mt-3">
                 <span className="text-black/40">Total payments logged:</span>
                 <span className={`${isPayerSumValid ? 'text-black' : 'text-rose-700'}`}>
-                  ${totalPaidSum.toFixed(2)} / ${amount.toFixed(2)}
+                  {Math.round(totalPaidSum).toLocaleString('vi-VN')} ₫ / {Math.round(amount).toLocaleString('vi-VN')} ₫
                 </span>
               </div>
             </div>
@@ -1148,19 +1148,19 @@ export default function ExpenseForm({
 
               {splitType === 'unequal' && (
                 <div className="space-y-2.5">
-                  <p className="text-[10px] text-black/40 mb-3 leading-relaxed">Assign exact dollar splits. Combined values must sum to ${amount.toFixed(2)}.</p>
+                  <p className="text-[10px] text-black/40 mb-3 leading-relaxed">Assign exact splits in ₫. Combined values must sum to {Math.round(amount).toLocaleString('vi-VN')} ₫.</p>
                   {members.map(m => (
                     <div key={m.id} className="flex items-center justify-between gap-3 bg-white p-3 px-4 border border-black/5 rounded-xs shadow-3xs" id={`unequal-row-${m.id}`}>
                       <span className="text-xs text-[#1A1A1A] font-bold">{m.name}</span>
                       <div className="relative w-32 shrink-0">
-                        <span className="absolute left-2.5 top-1.5 text-xs text-black/40">$</span>
+                        <span className="absolute left-2.5 top-1.5 text-xs text-black/40">₫</span>
                         <input
                           type="number"
-                          step="0.01"
+                          step="1"
                           min="0"
                           value={splits[m.id] || ''}
                           onChange={(e) => handleSplitValueChange(m.id, e.target.value)}
-                          placeholder="0.00"
+                          placeholder="0"
                           className="w-full bg-[#F4F2EE]/50 border border-black/10 focus:bg-white focus:border-black rounded-xs pl-6 pr-2.5 py-1.5 text-xs text-right font-sans focus:outline-none focus:ring-0 font-medium"
                           id={`unequal-input-${m.id}`}
                         />
@@ -1170,7 +1170,7 @@ export default function ExpenseForm({
                   <div className="flex items-center justify-between text-[10px] uppercase tracking-wider font-bold px-2 pt-2 border-t border-black/5 mt-3">
                     <span className="text-black/40">Total split sums:</span>
                     <span className={`${Math.abs(totalOwedSum() - amount) < 0.01 ? 'text-black' : 'text-rose-700'}`}>
-                      ${totalOwedSum().toFixed(2)} / ${amount.toFixed(2)}
+                      {Math.round(totalOwedSum()).toLocaleString('vi-VN')} ₫ / {Math.round(amount).toLocaleString('vi-VN')} ₫
                     </span>
                   </div>
                 </div>
@@ -1185,7 +1185,7 @@ export default function ExpenseForm({
                       <div key={m.id} className="flex items-center justify-between gap-3 bg-white p-3 px-4 border border-black/5 rounded-xs shadow-3xs" id={`percentage-row-${m.id}`}>
                         <div>
                           <span className="text-xs text-[#1A1A1A] font-bold">{m.name}</span>
-                          <span className="text-[10px] text-black/40 ml-2 font-serif italic">(${calculatedOwed.toFixed(2)})</span>
+                          <span className="text-[10px] text-black/40 ml-2 font-serif italic">({Math.round(calculatedOwed).toLocaleString('vi-VN')} ₫)</span>
                         </div>
                         <div className="relative w-32 shrink-0">
                           <span className="absolute right-2.5 top-1.5 text-xs text-black/40">%</span>
@@ -1224,7 +1224,7 @@ export default function ExpenseForm({
                       <div key={m.id} className="flex items-center justify-between gap-3 bg-white p-3 px-4 border border-black/5 rounded-xs shadow-3xs" id={`shares-row-${m.id}`}>
                         <div>
                           <span className="text-xs text-[#1A1A1A] font-bold">{m.name}</span>
-                          <span className="text-[10px] text-black/40 ml-2 font-serif italic">(${calculatedOwed.toFixed(2)})</span>
+                          <span className="text-[10px] text-black/40 ml-2 font-serif italic">({Math.round(calculatedOwed).toLocaleString('vi-VN')} ₫)</span>
                         </div>
                         <div className="relative w-32 shrink-0">
                           <span className="absolute right-2.5 top-1.5 text-xs text-black/40 font-sans">shares</span>
@@ -1262,7 +1262,7 @@ export default function ExpenseForm({
                 return (
                   <div key={m.id} className="flex items-center justify-between p-3 px-4 border border-black/5 rounded-xs bg-white text-xs font-sans shadow-3xs">
                     <span className="font-bold text-[#1A1A1A]">{m.name}</span>
-                    <span className="font-serif italic font-bold text-black">${shareAmount.toFixed(2)}</span>
+                    <span className="font-serif italic font-bold text-black">{Math.round(shareAmount).toLocaleString('vi-VN')} ₫</span>
                   </div>
                 );
               })}

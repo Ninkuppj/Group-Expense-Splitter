@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Landmark, Sparkles, TrendingUp, Receipt, Wallet, Plus, HelpCircle, Check, ArrowRight } from 'lucide-react';
+import { Landmark, Sparkles, TrendingUp, Receipt, Wallet, Plus, HelpCircle, Check, ArrowRight, Utensils } from 'lucide-react';
 import { Group, Member, Expense, AVATAR_COLORS, MenuItem } from './types';
 import GroupList from './components/GroupList';
 import ExpenseForm from './components/ExpenseForm';
 import ExpenseList from './components/ExpenseList';
 import DebtSettle from './components/DebtSettle';
 import Dashboard from './components/Dashboard';
+import MenuManager from './components/MenuManager';
 
 // Helper to seed initial demo data if localStorage is empty
 const SEED_GROUPS: Group[] = [
@@ -15,10 +16,10 @@ const SEED_GROUPS: Group[] = [
     description: 'Annual snowboarding trip to Tahoe with roommates',
     createdAt: new Date().toISOString().split('T')[0],
     members: [
-      { id: 'm1', name: 'John Doe', email: 'john@example.com', avatarColor: 'bg-emerald-500 text-white' },
-      { id: 'm2', name: 'Alice Smith', email: 'alice@example.com', avatarColor: 'bg-blue-500 text-white' },
-      { id: 'm3', name: 'Bob Jones', email: 'bob@example.com', avatarColor: 'bg-indigo-500 text-white' },
-      { id: 'm4', name: 'Clara White', email: 'clara@example.com', avatarColor: 'bg-rose-500 text-white' },
+      { id: 'm1', name: 'John Doe', phone: '0901234567', avatarColor: 'bg-emerald-500 text-white' },
+      { id: 'm2', name: 'Alice Smith', phone: '0912345678', avatarColor: 'bg-blue-500 text-white' },
+      { id: 'm3', name: 'Bob Jones', phone: '0923456789', avatarColor: 'bg-indigo-500 text-white' },
+      { id: 'm4', name: 'Clara White', phone: '0934567890', avatarColor: 'bg-rose-500 text-white' },
     ],
     expenses: [
       {
@@ -62,8 +63,8 @@ const SEED_GROUPS: Group[] = [
     description: 'Monthly utility and rent splitting',
     createdAt: new Date().toISOString().split('T')[0],
     members: [
-      { id: 'm5', name: 'Emma Watson', email: 'emma@example.com', avatarColor: 'bg-violet-500 text-white' },
-      { id: 'm6', name: 'Liam Neeson', email: 'liam@example.com', avatarColor: 'bg-amber-500 text-white' },
+      { id: 'm5', name: 'Emma Watson', phone: '0987654321', avatarColor: 'bg-violet-500 text-white' },
+      { id: 'm6', name: 'Liam Neeson', phone: '0976543210', avatarColor: 'bg-amber-500 text-white' },
     ],
     expenses: [
       {
@@ -83,30 +84,46 @@ const SEED_GROUPS: Group[] = [
 export default function App() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'expenses' | 'settle'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'expenses' | 'settle' | 'menu'>('dashboard');
   
   // Modal / Form state
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
-  // Load from LocalStorage
+  // Load from database with LocalStorage fallback
   useEffect(() => {
-    const saved = localStorage.getItem('splitter_groups_data');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed && Array.isArray(parsed) && parsed.length > 0) {
-          setGroups(parsed);
-          setActiveGroupId(parsed[0].id);
-          return;
+    fetch('/api/groups')
+      .then(res => {
+        if (!res.ok) throw new Error("Backend offline or not migrated");
+        return res.json();
+      })
+      .then(data => {
+        if (data && data.length > 0) {
+          setGroups(data);
+          setActiveGroupId(data[0].id);
+        } else {
+          setGroups([]);
         }
-      } catch (e) {
-        console.error("Error loading localStorage data", e);
-      }
-    }
-    // Fallback to seeds
-    setGroups(SEED_GROUPS);
-    setActiveGroupId(SEED_GROUPS[0].id);
+      })
+      .catch(err => {
+        console.warn("Database sync unavailable, falling back to localStorage:", err.message);
+        const saved = localStorage.getItem('splitter_groups_data');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (parsed && Array.isArray(parsed) && parsed.length > 0) {
+              setGroups(parsed);
+              setActiveGroupId(parsed[0].id);
+              return;
+            }
+          } catch (e) {
+            console.error("Error parsing localStorage data", e);
+          }
+        }
+        // Fallback to seeds
+        setGroups(SEED_GROUPS);
+        setActiveGroupId(SEED_GROUPS[0].id);
+      });
   }, []);
 
   // Sync to LocalStorage
@@ -118,9 +135,10 @@ export default function App() {
   const activeGroup = groups.find(g => g.id === activeGroupId) || null;
 
   // Handler: Create Group
-  const handleCreateGroup = (name: string, description: string) => {
-    const newGroup: Group = {
-      id: crypto.randomUUID(),
+  const handleCreateGroup = async (name: string, description: string) => {
+    const tempId = crypto.randomUUID();
+    const tempGroup: Group = {
+      id: tempId,
       name,
       description,
       createdAt: new Date().toISOString().split('T')[0],
@@ -129,27 +147,55 @@ export default function App() {
       ],
       expenses: []
     };
-    const updated = [newGroup, ...groups];
+    const updated = [tempGroup, ...groups];
     saveState(updated);
-    setActiveGroupId(newGroup.id);
+    setActiveGroupId(tempId);
+
+    try {
+      const res = await fetch('/api/groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, description })
+      });
+      if (res.ok) {
+        const dbGroup = await res.json();
+        setGroups(prev => prev.map(g => g.id === tempId ? {
+          ...g,
+          id: dbGroup.id,
+          members: dbGroup.members
+        } : g));
+        setActiveGroupId(dbGroup.id);
+      }
+    } catch (err) {
+      console.error("Failed to persist group to database:", err);
+    }
   };
 
   // Handler: Delete Group
-  const handleDeleteGroup = (groupId: string) => {
+  const handleDeleteGroup = async (groupId: string) => {
     const updated = groups.filter(g => g.id !== groupId);
     saveState(updated);
     if (activeGroupId === groupId) {
       setActiveGroupId(updated[0]?.id || null);
     }
+
+    try {
+      await fetch(`/api/groups/${groupId}`, {
+        method: 'DELETE'
+      });
+    } catch (err) {
+      console.error("Failed to delete group in database:", err);
+    }
   };
 
   // Handler: Add Member to Group
-  const handleAddMember = (groupId: string, name: string, email?: string) => {
+  const handleAddMember = async (groupId: string, name: string, phone?: string) => {
     const randomColor = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
+    const tempId = crypto.randomUUID();
     const newMember: Member = {
-      id: crypto.randomUUID(),
+      id: tempId,
       name,
-      email,
+      phone,
       avatarColor: randomColor
     };
 
@@ -163,10 +209,52 @@ export default function App() {
       return g;
     });
     saveState(updated);
+
+    try {
+      const res = await fetch(`/api/groups/${groupId}/members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone, avatarColor: randomColor })
+      });
+      if (res.ok) {
+        const dbMember = await res.json();
+        setGroups(prev => prev.map(g => {
+          if (g.id === groupId) {
+            return {
+              ...g,
+              members: g.members.map(m => m.id === tempId ? dbMember : m)
+            };
+          }
+          return g;
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to add member to database:", err);
+    }
+  };
+
+  const handleUpdateMember = async (memberId: string, name: string, phone?: string) => {
+    const updated = groups.map(g => {
+      return {
+        ...g,
+        members: g.members.map(m => m.id === memberId ? { ...m, name, phone } : m)
+      };
+    });
+    saveState(updated);
+
+    try {
+      await fetch(`/api/members/${memberId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone })
+      });
+    } catch (err) {
+      console.error("Failed to update member in database:", err);
+    }
   };
 
   // Handler: Create or Update Expense
-  const handleSaveExpense = (expense: Expense) => {
+  const handleSaveExpense = async (expense: Expense) => {
     if (!activeGroupId) return;
 
     const updated = groups.map(g => {
@@ -187,6 +275,44 @@ export default function App() {
     saveState(updated);
     setIsFormOpen(false);
     setEditingExpense(null);
+
+    try {
+      const res = await fetch(`/api/groups/${activeGroupId}/expenses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(expense)
+      });
+      if (res.ok) {
+        const dbExpense = await res.json();
+        const formattedExpense: Expense = {
+          id: dbExpense.id,
+          description: dbExpense.description,
+          amount: dbExpense.amount,
+          date: dbExpense.date.split('T')[0],
+          category: dbExpense.category,
+          note: dbExpense.note || undefined,
+          billImage: dbExpense.billImage || undefined,
+          payers: dbExpense.payers,
+          splitType: dbExpense.splitType as any,
+          splits: dbExpense.splits,
+          billType: dbExpense.billType || undefined,
+          menuItems: dbExpense.menuItems || undefined,
+          partyItems: dbExpense.partyItems || undefined
+        };
+
+        setGroups(prev => prev.map(g => {
+          if (g.id === activeGroupId) {
+            return {
+              ...g,
+              expenses: g.expenses.map(e => e.id === expense.id || e.id === dbExpense.id ? formattedExpense : e)
+            };
+          }
+          return g;
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to save expense in database:", err);
+    }
   };
 
   // Handler: Settle Transaction trigger (automatically logs a settlement expense)
@@ -201,7 +327,7 @@ export default function App() {
   };
 
   // Handler: Delete Expense
-  const handleDeleteExpense = (expenseId: string) => {
+  const handleDeleteExpense = async (expenseId: string) => {
     if (!activeGroupId) return;
 
     const updated = groups.map(g => {
@@ -215,10 +341,18 @@ export default function App() {
     });
 
     saveState(updated);
+
+    try {
+      await fetch(`/api/expenses/${expenseId}`, {
+        method: 'DELETE'
+      });
+    } catch (err) {
+      console.error("Failed to delete expense in database:", err);
+    }
   };
 
   // Handler: Update Group Custom Menu
-  const handleUpdateGroupMenu = (groupId: string, menu: MenuItem[]) => {
+  const handleUpdateGroupMenu = async (groupId: string, menu: MenuItem[]) => {
     const updated = groups.map(g => {
       if (g.id === groupId) {
         return {
@@ -229,6 +363,28 @@ export default function App() {
       return g;
     });
     saveState(updated);
+
+    try {
+      const res = await fetch(`/api/groups/${groupId}/menu`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ menu })
+      });
+      if (res.ok) {
+        const dbMenu = await res.json();
+        setGroups(prev => prev.map(g => {
+          if (g.id === groupId) {
+            return {
+              ...g,
+              customMenu: dbMenu
+            };
+          }
+          return g;
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to update custom menu in database:", err);
+    }
   };
 
   return (
@@ -352,6 +508,16 @@ export default function App() {
                       <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-black" />
                     )}
                   </button>
+                  <button
+                    onClick={() => setActiveTab('menu')}
+                    className={`pb-4 -mb-4 font-bold text-[11px] uppercase tracking-[0.2em] transition-all relative ${activeTab === 'menu' ? 'text-black' : 'text-black/40 hover:text-black'}`}
+                    id="tab-menu"
+                  >
+                    Group Menu
+                    {activeTab === 'menu' && (
+                      <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-black" />
+                    )}
+                  </button>
                 </div>
 
                 <div className="text-[10px] text-black/50 font-semibold uppercase tracking-widest text-left">
@@ -383,6 +549,14 @@ export default function App() {
                       members={activeGroup.members}
                       expenses={activeGroup.expenses}
                       onRecordSettlement={handleRecordSettlement}
+                      onUpdateMember={handleUpdateMember}
+                    />
+                  )}
+
+                  {activeTab === 'menu' && (
+                    <MenuManager
+                      customMenu={activeGroup.customMenu || []}
+                      onUpdateMenu={(menu) => handleUpdateGroupMenu(activeGroup.id, menu)}
                     />
                   )}
                 </div>

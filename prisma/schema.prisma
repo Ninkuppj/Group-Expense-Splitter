@@ -1,0 +1,54 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Group {
+  id          String     @id @default(uuid())
+  name        String
+  description String
+  createdAt   DateTime   @default(now())
+  members     Member[]
+  expenses    Expense[]
+  customMenu  MenuItem[]
+}
+
+model Member {
+  id          String   @id @default(uuid())
+  name        String
+  phone       String?
+  avatarColor String?
+  groupId     String
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+}
+
+model MenuItem {
+  id       String @id @default(uuid())
+  name     String
+  price    Float
+  category String
+  groupId  String
+  group    Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  description String
+  amount      Float
+  date        DateTime @default(now())
+  category    String
+  note        String?
+  billImage   String?
+  payers      Json     // key-value object: { [memberId]: amount }
+  splitType   String   // "equal", "unequal", "percentage", "shares"
+  splits      Json     // key-value object: { [memberId]: splitValue }
+  billType    String?  // "daily" or "party"
+  menuItems   Json?    // list of MenuItemInstance
+  partyItems  Json?    // list of PartyItemInstance
+  groupId     String
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+}

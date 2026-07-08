@@ -47,7 +47,7 @@ export default function Dashboard({ members, expenses }: DashboardProps) {
       return (
         <div className="bg-black text-white p-3.5 border border-black rounded-xs shadow-xl text-xs font-sans">
           <p className="font-bold mb-1">{payload[0].name}</p>
-          <p className="text-[#D2C9B9] font-medium">Spent: ${payload[0].value.toFixed(2)}</p>
+          <p className="text-[#D2C9B9] font-medium">Spent: {Math.round(payload[0].value).toLocaleString('vi-VN')} ₫</p>
         </div>
       );
     }
@@ -60,8 +60,8 @@ export default function Dashboard({ members, expenses }: DashboardProps) {
         <div className="bg-black text-white p-3.5 border border-black rounded-xs shadow-xl text-xs font-sans">
           <p className="font-bold mb-1.5">{payload[0].payload.name}</p>
           <div className="space-y-0.5 font-medium">
-            <p className="text-[#D2C9B9]">Total Paid: ${payload[0].value.toFixed(2)}</p>
-            <p className="text-stone-400">Share Owed: ${payload[1].value.toFixed(2)}</p>
+            <p className="text-[#D2C9B9]">Total Paid: {Math.round(payload[0].value).toLocaleString('vi-VN')} ₫</p>
+            <p className="text-stone-400">Share Owed: {Math.round(payload[1].value).toLocaleString('vi-VN')} ₫</p>
           </div>
         </div>
       );
@@ -76,7 +76,7 @@ export default function Dashboard({ members, expenses }: DashboardProps) {
         <div className="bg-white border border-black/5 rounded-xs p-6 shadow-xs font-sans" id="metric-total-spend">
           <span className="text-[10px] font-bold text-black/40 uppercase tracking-[0.2em] block mb-2">Total Spending</span>
           <div className="flex items-baseline gap-1">
-            <span className="font-serif italic text-3xl md:text-4xl text-[#1A1A1A]">${totalSpend.toFixed(2)}</span>
+            <span className="font-serif italic text-3xl md:text-4xl text-[#1A1A1A]">{Math.round(totalSpend).toLocaleString('vi-VN')} ₫</span>
           </div>
         </div>
 
@@ -90,14 +90,14 @@ export default function Dashboard({ members, expenses }: DashboardProps) {
         <div className="bg-white border border-black/5 rounded-xs p-6 shadow-xs font-sans" id="metric-avg-size">
           <span className="text-[10px] font-bold text-black/40 uppercase tracking-[0.2em] block mb-2">Avg Session Cost</span>
           <div className="flex items-baseline gap-1">
-            <span className="font-serif italic text-3xl md:text-4xl text-[#1A1A1A]">${avgSpend.toFixed(2)}</span>
+            <span className="font-serif italic text-3xl md:text-4xl text-[#1A1A1A]">{Math.round(avgSpend).toLocaleString('vi-VN')} ₫</span>
           </div>
         </div>
 
         <div className="bg-white border border-black/5 rounded-xs p-6 shadow-xs font-sans" id="metric-share">
           <span className="text-[10px] font-bold text-black/40 uppercase tracking-[0.2em] block mb-2">Cost Per Member</span>
           <div className="flex items-baseline gap-1">
-            <span className="font-serif italic text-3xl md:text-4xl text-[#1A1A1A]">${spendPerMember.toFixed(2)}</span>
+            <span className="font-serif italic text-3xl md:text-4xl text-[#1A1A1A]">{Math.round(spendPerMember).toLocaleString('vi-VN')} ₫</span>
           </div>
         </div>
       </div>
